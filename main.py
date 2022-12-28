@@ -50,6 +50,11 @@ lose_label = label.render("You Lose!", False, (193, 196, 199))
 res_label = label.render("Try Again", False, (113, 126, 19))
 res_label_rect = res_label.get_rect(topleft=(180, 200))
 
+#Стрельба
+bullets_left = 5
+bullet = pygame.image.load("images/bullet.png")
+bullets = []
+
 gameplay = True
 
 #Running
@@ -112,6 +117,23 @@ while running:
         bg_x -= 2
         if bg_x == - 618:
             bg_x = 0
+
+        #Стрельба
+        if bullets:
+            for (i, el) in enumerate(bullets):
+                screen.blit(bullet, (el.x, el.y))
+                el.x += 4
+
+
+                if el.x > 630:
+                    bullets.pop(i)
+                
+                if devil_list_in_game:
+                    for (index, devil_el) in enumerate(devil_list_in_game):
+                        if el.colliderect(devil_el):
+                            devil_list_in_game.pop(index)
+                            bullets.pop(i)
+
     else:
         screen.fill((56, 11, 98))
         screen.blit(lose_label, (180, 100))
@@ -122,6 +144,7 @@ while running:
             gameplay = True
             player_x = 150
             devil_list_in_game.clear()
+            bullets.clear()
 
     pygame.display.update()
 
@@ -132,6 +155,8 @@ while running:
             pygame.quit()
         if event.type == devil_timer:
             devil_list_in_game.append(devil.get_rect(topleft=(620, 115)))
-
+        if gameplay and event.type == pygame.KEYUP and event.key == pygame.K_b and bullets_left > 0:
+            bullets.append(bullet.get_rect(topleft=(player_x + 30 , player_y + 10)))
+            bullets_left -= 1
 
     clock.tick(15)
