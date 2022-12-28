@@ -1,6 +1,5 @@
 import pygame
 
-
 clock = pygame.time.Clock()
 
 pygame.init()
@@ -25,7 +24,6 @@ walk_right = [
 ]
 
 
-
 #Enemy Devil
 devil = pygame.image.load('images/devil.png').convert_alpha()
 devil_list_in_game = []
@@ -38,7 +36,7 @@ player_x = 150
 player_y = 170
 
 is_jump = False
-jump_count = 10
+jump_count = 10 
 
 bg_sound = pygame.mixer.Sound("music/Walk.mp3")
 bg_sound.play()
@@ -47,59 +45,87 @@ bg_sound.set_volume(0.1)
 devil_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(devil_timer, 2500)
 
+label = pygame.font.Font('fonts/RubikBubbles-Regular.ttf', 40)
+lose_label = label.render("You Lose!", False, (193, 196, 199))
+res_label = label.render("Try Again", False, (113, 126, 19))
+res_label_rect = res_label.get_rect(topleft=(180, 200))
+
+gameplay = True
+
+#Running
 running = True
 while running:
 
     screen.blit(bg, (bg_x, 0))
     screen.blit(bg, (bg_x + 600, 0))
 
-    player_rect = walk_left[0].get_rect(topleft=(player_x, player_y))
-    
-    if devil_list_in_game:
-        for el in devil_list_in_game:
-            screen.blit(devil, el)
-            el.x -= 10
+    if gameplay:
+        player_rect = walk_left[0].get_rect(topleft=(player_x, player_y))
+        
+        #Enemy Collide
+        if devil_list_in_game:
+            for (i, el) in enumerate(devil_list_in_game):
+                screen.blit(devil, el)
+                el.x -= 10
 
-            if player_rect.colliderect(el):
-                 print("You Loose")
+                if el.x < -25:
+                    devil_list_in_game.pop(i) #Удаление врагов с карты
 
-    keys = pygame.key.get_pressed()
+                if player_rect.colliderect(el):
+                    gameplay = False
 
-    if keys[pygame.K_LEFT]:
-        screen.blit(walk_left[player_anim_count], (player_x, player_y))
-    else:
-        screen.blit(walk_right[player_anim_count], (player_x, player_y))
-
-    if keys[pygame.K_LEFT] and player_x > -20:
-        player_x -= player_speed
-    elif keys[pygame.K_RIGHT] and player_x < 500:
-        player_x += player_speed
-
-    if not is_jump:
-        if keys[pygame.K_SPACE]:
-            is_jump = True
-    else:
-        if jump_count >= -10:
-            if jump_count > 0:
-                player_y -= (jump_count ** 2) / 2
-            else:
-                player_y += (jump_count ** 2) / 2
-            jump_count -= 1
+        keys = pygame.key.get_pressed()
+        
+        #Key Left & Right
+        if keys[pygame.K_LEFT]:
+            screen.blit(walk_left[player_anim_count], (player_x, player_y))
         else:
-            is_jump = False
-            jump_count = 10
+            screen.blit(walk_right[player_anim_count], (player_x, player_y))
 
-    if player_anim_count == 3:
-        player_anim_count =0
+        if keys[pygame.K_LEFT] and player_x > -20:
+            player_x -= player_speed
+        elif keys[pygame.K_RIGHT] and player_x < 500:
+            player_x += player_speed
+
+        if not is_jump:
+            if keys[pygame.K_SPACE]:
+                is_jump = True
+
+        #Jump
+        else:
+            if jump_count >= -10:
+                if jump_count > 0:
+                    player_y -= (jump_count ** 2) / 2
+                else:
+                    player_y += (jump_count ** 2) / 2
+                jump_count -= 1
+            else:
+                is_jump = False
+                jump_count = 10
+
+        #Animation
+        if player_anim_count == 3:
+            player_anim_count =0
+        else:
+            player_anim_count += 1
+
+        bg_x -= 2
+        if bg_x == - 618:
+            bg_x = 0
     else:
-        player_anim_count += 1
+        screen.fill((56, 11, 98))
+        screen.blit(lose_label, (180, 100))
+        screen.blit(res_label, (res_label_rect))
 
-    bg_x -= 2
-    if bg_x == - 618:
-         bg_x = 0
+        mouse = pygame.mouse.get_pos()
+        if res_label_rect.collidepoint(mouse) and pygame.mouse.get_pressed()[0]:
+            gameplay = True
+            player_x = 150
+            devil_list_in_game.clear()
 
     pygame.display.update()
 
+    #Game running event
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
